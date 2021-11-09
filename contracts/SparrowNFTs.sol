@@ -13,15 +13,18 @@ contract SparrowNFTs is Ownable, KIP37, KIP37Burnable, KIP37Pausable {
 
     uint256 public current = 0;
     mapping(uint256 => address) public minters;
+    mapping(uint256 => string) public extnames;
+    mapping(uint256 => string) public titles;
+    mapping(uint256 => string) public descriptions;
 
-    constructor() public KIP37("https://api.ricecakemill.com/sparrow/nft/{id}") {}
+    constructor() public KIP37("https://api.ricecakemill.com/sparrow/nft/{id}.json") {}
 
     function uri(uint256 _tokenId) external view returns (string memory) {
         uint256 tokenId = _tokenId;
         require(minters[tokenId] != address(0), "KIP37: URI query for nonexistent token");
         
         if (tokenId == 0) {
-            return "https://api.ricecakemill.com/sparrow/nft/0";
+            return "https://api.ricecakemill.com/sparrow/nft/0.json";
         }
 
         string memory baseURI = "https://api.ricecakemill.com/sparrow/nft/";
@@ -44,14 +47,24 @@ contract SparrowNFTs is Ownable, KIP37, KIP37Burnable, KIP37Pausable {
         return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, idstr)) : "";
     }
     
-    function mint(uint256 amount) external {
+    function mint(string calldata extname, string calldata title, string calldata description, uint256 amount) external {
         _mint(msg.sender, current, amount, "");
         minters[current] = msg.sender;
+        extnames[current] = extname;
+        titles[current] = title;
+        descriptions[current] = description;
         current = current.add(1);
     }
 
     function mintMore(uint256 id, uint256 amount) external {
         require(minters[id] == msg.sender);
         _mint(msg.sender, id, amount, "");
+    }
+
+    function changeInfo(uint256 id, string calldata extname, string calldata title, string calldata description) external {
+        require(minters[id] == msg.sender);
+        extnames[id] = extname;
+        titles[id] = title;
+        descriptions[id] = description;
     }
 }
